@@ -8,9 +8,12 @@ public class Main {
 
         EventRepository eventStore = new EventStore();
 
-        EventReciever eventReciever = new EventReciever(eventStore);
+        Partitioner partitioner = new SimplePartitioner(4);
+        
+        EventReciever eventReciever = new EventReciever(eventStore, partitioner);
 
         StatsGenerator statsGenerator = new StatsGenerator(eventStore);
+
 
         Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
         Event e2 = eventReciever.recieve("dbxy6654", EventType.PURCHASE);
