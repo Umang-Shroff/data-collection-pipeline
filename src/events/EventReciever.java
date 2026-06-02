@@ -1,23 +1,26 @@
 package events;
 
+import events.Partition.Partitioner;
+import events.EventQueue.EventQueue;
+
 public class EventReciever {
 
-    private final EventRepository eventRepository;
+    private final EventQueue eventQueue;
     private final Partitioner partitioner;
 
-    public EventReciever(EventRepository eventRepository, Partitioner partitioner) {
-        this.eventRepository = eventRepository;
+    public EventReciever(EventQueue eventQueue, Partitioner partitioner) {
+        this.eventQueue = eventQueue;
         this.partitioner = partitioner;
     }
     
-    public Event recieve(String userId, EventType eventType){
+    public Event recieve(String userId, EventType eventType) throws InterruptedException {
         // return new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis());
 
         int partition = partitioner.getPartition(userId);
 
         Event event = new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis(),partition);
 
-        eventRepository.save(event);
+        eventQueue.publish(event);
 
         return event;
     }

@@ -1,4 +1,4 @@
-package events;
+package events.Partition;
 
 public class SimplePartitioner implements Partitioner{
     
