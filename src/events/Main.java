@@ -2,6 +2,7 @@ package events;
 
 // import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import events.Partition.Partitioner;
 import events.Partition.SimplePartitioner;
@@ -12,6 +13,8 @@ import events.Workers.BatchWorker;
 public class Main {
     public static void main(String[] args) {
         try{
+
+            Random random = new Random();
 
             EventRepository eventStore = new EventStore();
 
@@ -28,11 +31,17 @@ public class Main {
             BatchWorker worker = new BatchWorker(queue, eventStore);
             Thread workerThread = new Thread(worker);
         
-            Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
-            Event e2 = eventReciever.recieve("dbxy6654", EventType.PURCHASE);
-            Event e3 = eventReciever.recieve("rrtx87", EventType.PURCHASE);
-            Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
+            // Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
+            // Event e2 = eventReciever.recieve("dbxy6654", EventType.PURCHASE);
+            // Event e3 = eventReciever.recieve("rrtx87", EventType.PURCHASE);
+            // Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
             // System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
+
+            for(int i=0;i<12;i++){
+                String userId = "user"+i;
+                EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
+                eventReciever.recieve(userId, eventType);
+            }
 
             //Printing queue stats
             inspector.printStats();

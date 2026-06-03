@@ -26,7 +26,11 @@ public class BatchWorker implements Runnable {
             try{
                 Event event = eventQueue.consume();
                 System.out.println("[WORKER] Processing Event: " + event.eventId());
-                eventRepository.save(event);
+                batch.add(event);
+                System.out.println("[WORKER] Added event " + event.eventId() + " to batch.");
+                if(batch.size() >= BatchConfig.BATCH_SIZE){
+                    flushBatch();
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 System.out.println("[WORKER] Interrupted, shutting down.");
@@ -36,14 +40,14 @@ public class BatchWorker implements Runnable {
     }
 
     private void flushBatch() {
-        
+
         if(batch.isEmpty()){
             return;
         }
 
         eventRepository.saveBatch(batch);
 
-        System.out.println("[WORKER] Flushed " + batch.size() + " events");
+        System.out.println("\n[WORKER] Flushed " + batch.size() + " events\n");
         
         batch.clear();
     }
