@@ -14,6 +14,10 @@ public class EventStore implements EventRepository {
         events.add(event);
     }
 
+    public void saveBatch(List<Event> batch) {
+        events.addAll(batch);
+    }
+
     public List<Event> getAllEvents(){
         return new ArrayList<>(events);
     }

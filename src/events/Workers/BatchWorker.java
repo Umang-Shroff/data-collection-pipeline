@@ -3,15 +3,21 @@ package events.Workers;
 import events.Event;
 import events.EventRepository;
 import events.EventQueue.EventQueue;
+import events.Batch.BatchConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BatchWorker implements Runnable {
     
     private final EventQueue eventQueue;
     private final EventRepository eventRepository;
+    private final List<Event> batch;
 
     public BatchWorker(EventQueue eventQueue, EventRepository eventRepository) {
         this.eventQueue = eventQueue;
         this.eventRepository = eventRepository;
+        this.batch = new ArrayList<>();
     }
 
     @Override
@@ -27,5 +33,18 @@ public class BatchWorker implements Runnable {
                 break; // Exit the loop if interrupted
             }
         }
+    }
+
+    private void flushBatch() {
+        
+        if(batch.isEmpty()){
+            return;
+        }
+
+        eventRepository.saveBatch(batch);
+
+        System.out.println("[WORKER] Flushed " + batch.size() + " events");
+        
+        batch.clear();
     }
 }
