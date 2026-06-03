@@ -7,29 +7,38 @@ import events.Partition.Partitioner;
 import events.Partition.SimplePartitioner;
 import events.EventQueue.EventQueue;
 import events.EventQueue.QueueInspector;
+import events.Workers.BatchWorker;
 
 public class Main {
     public static void main(String[] args) {
         try{
 
             EventRepository eventStore = new EventStore();
-            
+
             EventQueue queue = new EventQueue(100);
-            
+
             QueueInspector inspector = new QueueInspector(queue);
-            
+
             Partitioner partitioner = new SimplePartitioner(4);
-            
+
             EventReciever eventReciever = new EventReciever(queue, partitioner);
-            
+
             StatsGenerator statsGenerator = new StatsGenerator(eventStore);
 
+            BatchWorker worker = new BatchWorker(queue, eventStore);
+            Thread workerThread = new Thread(worker);
         
             Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
             Event e2 = eventReciever.recieve("dbxy6654", EventType.PURCHASE);
             Event e3 = eventReciever.recieve("rrtx87", EventType.PURCHASE);
             Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
-            System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
+            // System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
+
+            //Printing queue stats
+            inspector.printStats();
+
+            workerThread.start();
+            Thread.sleep(5000); // Sleep for demo
 
             //Printing all events
             System.out.println("Total events = "+statsGenerator.countAllEvents());
@@ -42,11 +51,9 @@ public class Main {
                 System.out.println(entry.getKey() + " -> " + entry.getValue());
             }  
 
-            //Printing events of specified type
+            // Printing events of specified type
             System.out.println("Purchase events: "+ statsGenerator.countByType(EventType.PURCHASE));
-            
-            //Printing queue stats
-            inspector.printStats();
+
         } catch (InterruptedException e){
             e.printStackTrace();
         }
