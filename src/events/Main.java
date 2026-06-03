@@ -29,6 +29,7 @@ public class Main {
             StatsGenerator statsGenerator = new StatsGenerator(eventStore);
 
             BatchWorker worker = new BatchWorker(queue, eventStore);
+            
             Thread workerThread = new Thread(worker);
         
             // Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
@@ -47,7 +48,14 @@ public class Main {
             inspector.printStats();
 
             workerThread.start();
-            Thread.sleep(5000); // Sleep for demo
+
+            Thread.sleep(1000); // Sleep for demo
+
+            worker.stop();
+            workerThread.interrupt();
+
+            // Wait until worker has flushed
+            workerThread.join();
 
             //Printing all events
             System.out.println("Total events = "+statsGenerator.countAllEvents());
@@ -66,11 +74,5 @@ public class Main {
         } catch (InterruptedException e){
             e.printStackTrace();
         }
-
-
-        
-    
-        
-    
     }
 }

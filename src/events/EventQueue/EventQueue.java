@@ -3,8 +3,9 @@ package events.EventQueue;
 // thread safe queue
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-
 import events.Event;
+
+import java.util.concurrent.TimeUnit;
 
 
 public class EventQueue {
@@ -21,6 +22,10 @@ public class EventQueue {
 
     public Event consume() throws InterruptedException {
         return queue.take();
+    }
+
+    public Event poll(long timeoutSeconds) throws InterruptedException {
+        return queue.poll(timeoutSeconds, TimeUnit.SECONDS);
     }
 
     public int size() {

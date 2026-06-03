@@ -16,6 +16,7 @@ public class QueueInspector {
         for(Object obj : events){
             System.out.println(obj);
         }
+        System.out.println();
     }
 
 }
