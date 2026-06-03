@@ -3,34 +3,36 @@ package events;
 // import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
 
 import events.Partition.Partitioner;
 import events.Partition.SimplePartitioner;
-import events.EventQueue.EventQueue;
-import events.EventQueue.QueueInspector;
 import events.Workers.BatchWorker;
+import events.Partition.PartitionManager;
 
 public class Main {
     public static void main(String[] args) {
         try{
+            // set number of partitions and queues / workers for that partition each
+            int partitionCount = 4;
+            int queueCapacity = 100;
 
             Random random = new Random();
 
             EventRepository eventStore = new EventStore();
 
-            EventQueue queue = new EventQueue(100);
+            // EventQueue queue = new EventQueue(queueCapacity);
+            PartitionManager partitionManager = new PartitionManager(partitionCount, queueCapacity);
 
-            QueueInspector inspector = new QueueInspector(queue);
+            Partitioner partitioner = new SimplePartitioner(partitionCount);
 
-            Partitioner partitioner = new SimplePartitioner(4);
-
-            EventReciever eventReciever = new EventReciever(queue, partitioner);
+            EventReciever eventReciever = new EventReciever(partitionManager, partitioner);
 
             StatsGenerator statsGenerator = new StatsGenerator(eventStore);
 
-            BatchWorker worker = new BatchWorker(queue, eventStore);
-            
-            Thread workerThread = new Thread(worker);
+            List<BatchWorker> workers = new ArrayList<>();
+            List<Thread> workerThreads = new ArrayList<>();
         
             // Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
             // Event e2 = eventReciever.recieve("dbxy6654", EventType.PURCHASE);
@@ -44,18 +46,34 @@ public class Main {
                 eventReciever.recieve(userId, eventType);
             }
 
-            //Printing queue stats
-            inspector.printStats();
+            // Start one worker per partition
+            for(int i=0; i<partitionManager.getPartitionCount(); i++){
+                BatchWorker worker = new BatchWorker("Worker-"+i, partitionManager.getQueue(i), eventStore);
+                Thread workerThread = new Thread(worker);
+                workers.add(worker);
+                workerThreads.add(workerThread);
+                workerThread.start();
+            }
+            
+            System.out.println("Total queued events = " + partitionManager.totalQueuedEvents());
 
-            workerThread.start();
+            while(!partitionManager.allQueuesEmpty()){
+                Thread.sleep(1000);
+            }
+            
+            for(BatchWorker worker : workers){
+                worker.stop();
+            }
 
-            Thread.sleep(1000); // Sleep for demo
+            for(Thread thread : workerThreads){
+                thread.interrupt();
+            }
 
-            worker.stop();
-            workerThread.interrupt();
+            for(Thread thread : workerThreads){
+                thread.join();
+            }
 
-            // Wait until worker has flushed
-            workerThread.join();
+
 
             //Printing all events
             System.out.println("Total events = "+statsGenerator.countAllEvents());
@@ -69,7 +87,7 @@ public class Main {
             }  
 
             // Printing events of specified type
-            System.out.println("Purchase events: "+ statsGenerator.countByType(EventType.PURCHASE));
+            // System.out.println("Purchase events: "+ statsGenerator.countByType(EventType.PURCHASE));
 
         } catch (InterruptedException e){
             e.printStackTrace();

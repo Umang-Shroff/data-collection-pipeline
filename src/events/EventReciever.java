@@ -2,14 +2,15 @@ package events;
 
 import events.Partition.Partitioner;
 import events.EventQueue.EventQueue;
+import events.Partition.PartitionManager;
 
 public class EventReciever {
 
-    private final EventQueue eventQueue;
     private final Partitioner partitioner;
+    private final PartitionManager partitionManager;
 
-    public EventReciever(EventQueue eventQueue, Partitioner partitioner) {
-        this.eventQueue = eventQueue;
+    public EventReciever(PartitionManager partitionManager, Partitioner partitioner) {
+        this.partitionManager = partitionManager;
         this.partitioner = partitioner;
     }
     
@@ -20,7 +21,7 @@ public class EventReciever {
 
         Event event = new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis(),partition);
 
-        eventQueue.publish(event);
+        partitionManager.getQueue(partition).publish(event);
 
         return event;
     }

@@ -14,9 +14,11 @@ public class BatchWorker implements Runnable {
     private final EventRepository eventRepository;
     private final List<Event> batch;
 
-    public volatile boolean running = true;
+    private volatile boolean running = true;
+    private final String workerName;
 
-    public BatchWorker(EventQueue eventQueue, EventRepository eventRepository) {
+    public BatchWorker(String workerName, EventQueue eventQueue, EventRepository eventRepository) {
+        this.workerName = workerName;
         this.eventQueue = eventQueue;
         this.eventRepository = eventRepository;
         this.batch = new ArrayList<>();
@@ -36,27 +38,27 @@ public class BatchWorker implements Runnable {
                     
                     batch.add(event);
                 
-                    System.out.println("[WORKER] Processing Event: " + event.eventId());
-                    System.out.println("[WORKER] Added event " + event.eventId() + " to batch.");
+                    System.out.println("["+ workerName +"] Processing Event: " + event.eventId());
+                    System.out.println("["+ workerName +"] Added event " + event.eventId() + " to batch.");
                     
                     if(batch.size() >= BatchConfig.BATCH_SIZE){
-                        System.out.println("\n[WORKER] Batch size reached.");
+                        System.out.println("\n["+ workerName +"] Batch size reached.");
                         flushBatch();
                     }
                 }else{
 
                     if(!batch.isEmpty()){
-                        System.out.println("\n[WORKER] Timeout reached.");
+                        System.out.println("\n["+ workerName +"] Timeout reached.");
                         flushBatch();
                     }
                 }
             } catch (InterruptedException e) {
                 if(!batch.isEmpty()){
-                    System.out.println("\n[WORKER] Flushing remaining events before shutdown.");
+                    System.out.println("\n["+ workerName +"] Flushing remaining events before shutdown.");
                     flushBatch();
                 }
                 Thread.currentThread().interrupt();
-                System.out.println("[WORKER] Interrupted, shutting down.");
+                System.out.println("["+ workerName +"] Interrupted, shutting down.");
                 break; // Exit the loop if interrupted
             }
         }
@@ -70,8 +72,12 @@ public class BatchWorker implements Runnable {
 
         eventRepository.saveBatch(batch);
 
-        System.out.println("[WORKER] Flushed " + batch.size() + " events\n");
+        System.out.println("\n["+ workerName +"] Flushed " + batch.size() + " events\n");
         
         batch.clear();
+    }
+
+    public int currentBatchSize() {
+        return batch.size();
     }
 }
