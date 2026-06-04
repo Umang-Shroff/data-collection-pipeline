@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import events.Partition.Partitioner;
 import events.Partition.SimplePartitioner;
 import events.Workers.BatchWorker;
+import events.LogGenerator.FileEventStore;
 import events.Partition.PartitionManager;
 
 public class Main {
@@ -17,10 +18,11 @@ public class Main {
             // set number of partitions and queues / workers for that partition each
             int partitionCount = 4;
             int queueCapacity = 100;
+            String logFile = "EventLogs/events.log";
 
             Random random = new Random();
 
-            EventRepository eventStore = new EventStore();
+            EventRepository eventStore = new FileEventStore(logFile);
 
             // EventQueue queue = new EventQueue(queueCapacity);
             PartitionManager partitionManager = new PartitionManager(partitionCount, queueCapacity);
