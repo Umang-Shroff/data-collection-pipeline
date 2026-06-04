@@ -1,7 +1,6 @@
 package events;
 
 import events.Partition.Partitioner;
-import events.EventQueue.EventQueue;
 import events.Partition.PartitionManager;
 
 public class EventReciever {
