@@ -11,6 +11,8 @@ import events.Partition.SimplePartitioner;
 import events.Workers.BatchWorker;
 import events.LogGenerator.FileEventStore;
 import events.Partition.PartitionManager;
+import events.Validation.EventValidator;
+import events.Validation.BasicEventValidator;
 
 public class Main {
     public static void main(String[] args) {
@@ -29,7 +31,9 @@ public class Main {
 
             Partitioner partitioner = new SimplePartitioner(partitionCount);
 
-            EventReciever eventReciever = new EventReciever(partitionManager, partitioner);
+            EventValidator validator = new BasicEventValidator();
+
+            EventReciever eventReciever = new EventReciever(partitionManager, partitioner, validator);
 
             StatsGenerator statsGenerator = new StatsGenerator(eventStore);
 
