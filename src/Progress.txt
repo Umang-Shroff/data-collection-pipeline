@@ -1,0 +1,338 @@
+EDGE CASES in current code:
+
+1.
+Main Thread decides shutdown based on:
+allQueuesEmpty()
+
+But queue empty does NOT necessarily mean processing complete.
+
+Example:
+Worker takes E1 from queue
+Queue becomes empty
+Worker has not yet saved E1
+
+At this instant:
+
+Queue = empty
+Batch = [E1]
+Repository = empty
+
+Main sees:
+
+allQueuesEmpty() == true
+
+and starts shutdown.
+Fortunately, your shutdown path flushes batches.
+So data won't be lost.
+
+But conceptually:
+Queue empty ≠ all work completed
+Currently relying on shutdown flushing remaining batches.
+
+
+
+2.
+Suppose new events arrive after:
+allQueuesEmpty()
+returns true.
+
+Example:
+Main sees queues empty
+↓
+Begins shutdown
+↓
+Another producer inserts event
+
+That event may never be processed.
+Currently this is safe only because:
+Main is the only producer
+and production finishes before shutdown begins.
+Not sustainable for streaming data like userEvents
+
+
+
+========================================================================================================
+
+
+WORKING EXAMPLE:
+
+Partition:
+
+Queue-0
+E1 E5 E9
+
+Queue-1
+E2 E6 E10
+
+Queue-2
+E3 E7 E11
+
+Queue-3
+E4 E8 E12
+
+---------------------------
+Memory:
+
+PartitionManager
+
+Queue-0
+[E1 E5 E9]
+
+Queue-1
+[E2 E6 E10]
+
+Queue-2
+[E3 E7 E11]
+
+Queue-3
+[E4 E8 E12]
+
+---------------------------
+Workers:
+Thread-0 -> Worker-0 -> Queue-0
+Thread-1 -> Worker-1 -> Queue-1
+Thread-2 -> Worker-2 -> Queue-2
+Thread-3 -> Worker-3 -> Queue-3
+
+---------------------------
+After worker execution:
+Worker-0 batch:
+[E1 E5 E9]
+
+Worker-1 batch:
+[E2 E6 E10]
+
+Worker-2 batch:
+[E3 E7 E11]
+
+Worker-3 batch:
+[E4 E8 E12]
+
+
+Queues become empty:
+Queue-0 []
+Queue-1 []
+Queue-2 []
+Queue-3 []
+
+allQueuesEmpty() -> true
+
+Main thread stops being in sleep loop
+worker.stop()
+worker.interrupt()
+
+Worker-0 flushes:
+[E1 E5 E9]
+
+Worker-1 flushes:
+[E2 E6 E10]
+
+Worker-2 flushes:
+[E3 E7 E11]
+
+Worker-3 flushes:
+[E4 E8 E12]
+
+
+EventStore: 
+[E1 E2 E3 E4
+ E5 E6 E7 E8
+ E9 E10 E11 E12]
+
+worker.join()
+workers meet with Main thread
+Main terminates
+
+
+
+
+
+
+
+
+
+
+TODO:
+
+
+{
+  "userId": "",
+  "eventType": "PURCHASE"
+}
+
+You probably don't want this entering your queues at all.
+
+Instead:
+
+if (!validator.isValid(event)) {
+    reject(event);
+    return;
+}
+
+Typical stages in a real event pipeline
+Stage 1: Schema Validation
+
+Check required fields.
+
+Example:
+
+{
+  "userId": "user123",
+  "eventType": "PURCHASE",
+  "timestamp": 123456789
+}
+
+Required:
+
+✓ userId
+✓ eventType
+✓ timestamp
+
+Missing:
+
+{
+  "eventType": "PURCHASE"
+}
+
+Reject.
+
+Stage 2: Type Validation
+
+Example:
+
+{
+  "timestamp": "hello"
+}
+
+Timestamp should be numeric.
+
+Reject.
+
+Stage 3: Business Validation
+
+Example:
+
+{
+  "eventType": "PURCHASE",
+  "amount": -500
+}
+
+Technically valid JSON.
+
+Business-wise invalid.
+
+Reject.
+
+Stage 4: Deduplication
+
+Sometimes producers retry.
+
+You may receive:
+
+Event A
+Event A
+Event A
+
+with same eventId.
+
+Without deduplication:
+
+Analytics:
+Purchases = 3
+
+Wrong.
+
+Many systems check:
+
+seen(eventId)
+
+before saving.
+
+Stage 5: Enrichment
+
+Add metadata.
+
+Producer sends:
+
+{
+  "userId": "123"
+}
+
+Pipeline enriches:
+
+{
+  "userId": "123",
+  "country": "IN",
+  "platform": "Android",
+  "receivedAt": "..."
+}
+
+Analytics becomes much richer.
+
+Where should enrichment happen?
+
+Commonly:
+
+Producer
+   ↓
+Receiver
+   ↓
+Validator
+   ↓
+Enricher
+   ↓
+Queue
+
+because workers should spend most of their time writing batches.
+
+You don't want workers doing heavy transformations if possible.
+
+
+
+CURRENTLY:
+Workers
+   ↓
+EventStore
+
+FUTURE:
+Workers
+   ↓
+Raw Event Store
+   ↓
+Analytics Processing
+   ↓
+Aggregations
+   ↓
+Dashboards
+
+
+
+FULL FLOW:
+Applications
+    │
+    ▼
+API Gateway
+    │
+    ▼
+Event Receiver
+    │
+    ▼
+Validation Layer
+    │
+    ▼
+Enrichment Layer
+    │
+    ▼
+Message Queue
+    │
+    ▼
+Workers
+    │
+    ▼
+Raw Event Storage
+    │
+    ▼
+Analytics Engine
+    │
+    ▼
+Reports / Dashboards
