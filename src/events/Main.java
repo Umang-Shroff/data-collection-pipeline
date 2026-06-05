@@ -11,8 +11,10 @@ import events.Partition.SimplePartitioner;
 import events.Workers.BatchWorker;
 import events.LogGenerator.FileEventStore;
 import events.Partition.PartitionManager;
-import events.Validation.EventValidator;
-import events.Validation.BasicEventValidator;
+import events.Validation.ValidationPipeline;
+import events.Validation.EventTypeValidator.EventTypeValidator;
+import events.Validation.UserValidator.UserValidator;
+import events.Validation.TimestampValidator.TimestampValidator;
 
 public class Main {
     public static void main(String[] args) {
@@ -31,7 +33,10 @@ public class Main {
 
             Partitioner partitioner = new SimplePartitioner(partitionCount);
 
-            EventValidator validator = new BasicEventValidator();
+            ValidationPipeline validator = new ValidationPipeline();
+            validator.addValidator(new UserValidator());
+            validator.addValidator(new EventTypeValidator());
+            validator.addValidator(new TimestampValidator());
 
             EventReciever eventReciever = new EventReciever(partitionManager, partitioner, validator);
 
