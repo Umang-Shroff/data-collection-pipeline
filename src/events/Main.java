@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
+import java.nio.file.Paths;
+import java.io.IOException;
 
 import events.Partition.Partitioner;
 import events.Partition.SimplePartitioner;
@@ -15,18 +17,23 @@ import events.Validation.ValidationPipeline;
 import events.Validation.EventTypeValidator.EventTypeValidator;
 import events.Validation.UserValidator.UserValidator;
 import events.Validation.TimestampValidator.TimestampValidator;
+import events.Processing.DedupProcessor;
+import events.LogGenerator.FileConfig;
 
 public class Main {
     public static void main(String[] args) {
         try{
             // set number of partitions and queues / workers for that partition each
-            int partitionCount = 4;
-            int queueCapacity = 100;
-            String logFile = "EventLogs/events.log";
+            int partitionCount = 5;
+            int queueCapacity = 1000;
 
             Random random = new Random();
 
-            EventRepository eventStore = new FileEventStore(logFile);
+            EventRepository eventStore = new FileEventStore(FileConfig.EVENT_LOG);
+
+            DedupProcessor dedupProcessor = new DedupProcessor(
+                Paths.get(FileConfig.EVENT_LOG),Paths.get(FileConfig.CLEAN_EVENT_LOG)
+            );
 
             // EventQueue queue = new EventQueue(queueCapacity);
             PartitionManager partitionManager = new PartitionManager(partitionCount, queueCapacity);
@@ -51,7 +58,7 @@ public class Main {
             // Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
             // System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
 
-            for(int i=0;i<12;i++){
+            for(int i=0;i<1000;i++){
                 String userId = "user"+i;
                 EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
                 eventReciever.recieve(userId, eventType);
@@ -84,7 +91,12 @@ public class Main {
                 thread.join();
             }
 
-
+            try{
+                dedupProcessor.process();
+            } catch(IOException e) {
+                System.err.println("Error processing file: " + e.getMessage());
+                e.printStackTrace();
+            }
 
             //Printing all events
             System.out.println("Total events = "+statsGenerator.countAllEvents());
