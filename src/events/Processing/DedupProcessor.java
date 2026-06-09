@@ -3,13 +3,13 @@ package events.Processing;
 import events.Event;
 import events.EventType;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class DedupProcessor {
@@ -40,64 +40,67 @@ public class DedupProcessor {
 
     public void process() throws IOException {
 
-        List<String> lines =
-                Files.readAllLines(sourceFile);
-
-        Set<Long> seenEventIds =
-                new HashSet<>();
-
-        int totalEvents = 0;
-        int duplicates = 0;
-
-        try(
-            BufferedWriter writer =
-                    Files.newBufferedWriter(
-                            outputFile,
-                            StandardOpenOption.CREATE,
-                            StandardOpenOption.TRUNCATE_EXISTING
-                    )
-        ) {
-
-            for(String line : lines) {
-
-                totalEvents++;
-
-                Event event =
-                        parseEvent(line);
-
-                if(seenEventIds.contains(
-                        event.eventId())) {
-
-                    duplicates++;
-
-                    continue;
+            Set<Long> seenEventIds =
+                    new HashSet<>();
+        
+            int totalEvents = 0;
+            int duplicates = 0;
+        
+            try (
+                    BufferedReader reader =
+                            Files.newBufferedReader(sourceFile);
+        
+                    BufferedWriter writer =
+                            Files.newBufferedWriter(
+                                    outputFile,
+                                    StandardOpenOption.CREATE,
+                                    StandardOpenOption.TRUNCATE_EXISTING
+                            )
+            ) {
+        
+                String line;
+        
+                while((line = reader.readLine()) != null) {
+                
+                    totalEvents++;
+                
+                    Event event =
+                            parseEvent(line);
+                
+                    if(seenEventIds.contains(
+                            event.eventId())) {
+                        
+                        duplicates++;
+                        
+                        continue;
+                    }
+            
+                    seenEventIds.add(
+                            event.eventId());
+                
+                    writer.write(line);
+                
+                    writer.newLine();
                 }
-
-                seenEventIds.add(
-                        event.eventId());
-
-                writer.write(line);
-
-                writer.newLine();
             }
+    
+            System.out.println();
+            System.out.println("====== DEDUP REPORT ======");
+    
+            System.out.println(
+                    "Total Events      : "
+                            + totalEvents);
+        
+            System.out.println(
+                    "Unique Events     : "
+                            + seenEventIds.size());
+        
+            System.out.println(
+                    "Duplicate Events  : "
+                            + duplicates);
+        
+            System.out.println("==========================");
         }
-
-        System.out.println();
-        System.out.println("====== DEDUP REPORT ======");
-        System.out.println(
-                "Total Events      : "
-                        + totalEvents);
-
-        System.out.println(
-                "Unique Events     : "
-                        + seenEventIds.size());
-
-        System.out.println(
-                "Duplicate Events  : "
-                        + duplicates);
-
-        System.out.println("==========================");
-    }
 
     private Event parseEvent(
             String line) {

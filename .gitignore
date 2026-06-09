@@ -4,4 +4,6 @@ out/
 target/
 .vscode/
 test/
+src/events/EventLogs/*.log
 src/events/EventLogs/events.log
+src/events/EventLogs/clean-events.log

@@ -19,6 +19,9 @@ import events.Validation.UserValidator.UserValidator;
 import events.Validation.TimestampValidator.TimestampValidator;
 import events.Processing.DedupProcessor;
 import events.LogGenerator.FileConfig;
+import events.Analytics.AnalyticsReport;
+import events.Analytics.AnalyticsWriter;
+import events.Processing.AggregationProcessor;
 
 public class Main {
     public static void main(String[] args) {
@@ -58,7 +61,7 @@ public class Main {
             // Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
             // System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
 
-            for(int i=0;i<1000;i++){
+            for(int i=0;i<12;i++){
                 String userId = "user"+i;
                 EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
                 eventReciever.recieve(userId, eventType);
@@ -94,6 +97,16 @@ public class Main {
             try{
                 dedupProcessor.process();
             } catch(IOException e) {
+                System.err.println("Error processing file: " + e.getMessage());
+                e.printStackTrace();
+            }
+
+            try{
+                AggregationProcessor aggregationProcessor = new AggregationProcessor(Paths.get("EventLogs/clean-events.log"));
+                AnalyticsReport report = aggregationProcessor.process();
+                AnalyticsWriter analyticsWriter = new AnalyticsWriter("EventLogs/metrics.log");
+                analyticsWriter.write(report);
+            } catch(IOException e){
                 System.err.println("Error processing file: " + e.getMessage());
                 e.printStackTrace();
             }
