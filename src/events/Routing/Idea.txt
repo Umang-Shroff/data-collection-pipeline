@@ -1,0 +1,14 @@
+A topic is now:
+    commerce-topic
+
+Containing:
+    Partition 0
+    Partition 1
+    Partition 2
+    Partition 3
+    .
+    .
+    .
+
+Instead of The Entire Application containing:
+    Partition 0, 1, 2, ...
