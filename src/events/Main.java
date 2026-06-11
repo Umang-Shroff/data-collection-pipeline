@@ -13,6 +13,10 @@ import events.Partition.SimplePartitioner;
 import events.Workers.BatchWorker;
 import events.LogGenerator.FileEventStore;
 import events.Partition.PartitionManager;
+import events.Routing.TopicManager;
+import events.Routing.CategoryRouter;
+import events.Routing.EventRouter;
+import events.Routing.Topic;
 import events.Validation.ValidationPipeline;
 import events.Validation.EventTypeValidator.EventTypeValidator;
 import events.Validation.UserValidator.UserValidator;
@@ -39,7 +43,9 @@ public class Main {
             );
 
             // EventQueue queue = new EventQueue(queueCapacity);
-            PartitionManager partitionManager = new PartitionManager(partitionCount, queueCapacity);
+            TopicManager topicManager = new TopicManager(partitionCount, queueCapacity);
+
+            EventRouter router = new CategoryRouter();
 
             Partitioner partitioner = new SimplePartitioner(partitionCount);
 
@@ -48,7 +54,7 @@ public class Main {
             validator.addValidator(new EventTypeValidator());
             validator.addValidator(new TimestampValidator());
 
-            EventReciever eventReciever = new EventReciever(partitionManager, partitioner, validator);
+            EventReciever eventReciever = new EventReciever(topicManager, partitioner, validator, router);
 
             StatsGenerator statsGenerator = new StatsGenerator(eventStore);
 
@@ -68,17 +74,26 @@ public class Main {
             }
 
             // Start one worker per partition
-            for(int i=0; i<partitionManager.getPartitionCount(); i++){
-                BatchWorker worker = new BatchWorker("Worker-"+i, partitionManager.getQueue(i), eventStore);
-                Thread workerThread = new Thread(worker);
-                workers.add(worker);
-                workerThreads.add(workerThread);
-                workerThread.start();
+            for(Topic topic : topicManager.getTopics().values()){
+
+                PartitionManager pm = topic.getPartitionManager();
+                
+                for(int i=0;i<pm.getPartitionCount();i++){
+                    
+                    String workerName = topic.getTopicName() + "-Worker-" + i;
+
+                    BatchWorker worker = new BatchWorker(workerName, pm.getQueue(i), eventStore);
+
+                    Thread workerThread = new Thread(worker);
+                    workers.add(worker);
+                    workerThreads.add(workerThread);
+                    workerThread.start();
+                }
             }
             
-            System.out.println("Total queued events = " + partitionManager.totalQueuedEvents());
+            System.out.println("Total queued events = " + topicManager.totalQueuedEvents());
 
-            while(!partitionManager.allQueuesEmpty()){
+            while(!topicManager.allQueuesEmpty()){
                 Thread.sleep(1000);
             }
             

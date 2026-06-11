@@ -28,6 +28,23 @@ public class TopicManager {
         );
     }
 
+    public int totalQueuedEvents(){
+        int total = 0;
+        for(Topic topic : topics.values()){
+            total += topic.getPartitionManager().totalQueuedEvents();
+        }
+        return total;
+    }
+
+    public boolean allQueuesEmpty(){
+        for(Topic topic : topics.values()){
+            if(!topic.getPartitionManager().allQueuesEmpty()){
+                return false;
+            }
+        }
+        return true;
+    }
+
     public Map<String, Topic> getTopics(){
         return topics;
     }

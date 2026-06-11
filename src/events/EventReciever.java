@@ -4,17 +4,22 @@ import events.Partition.Partitioner;
 import events.Partition.PartitionManager;
 import events.Validation.EventValidator;
 import events.Validation.ValidationResult;
+import events.Routing.EventRouter;
+import events.Routing.Topic;
+import events.Routing.TopicManager;
 
 public class EventReciever {
 
     private final Partitioner partitioner;
-    private final PartitionManager partitionManager;
+    private final TopicManager topicManager;
     private final EventValidator validator;
+    private final EventRouter router;
 
-    public EventReciever(PartitionManager partitionManager, Partitioner partitioner, EventValidator validator) {
-        this.partitionManager = partitionManager;
+    public EventReciever(TopicManager topicManager, Partitioner partitioner, EventValidator validator, EventRouter router) {
+        this.topicManager = topicManager;
         this.partitioner = partitioner;
         this.validator = validator;
+        this.router = router;
     }
     
     public Event recieve(String userId, EventType eventType) throws InterruptedException {
@@ -30,7 +35,15 @@ public class EventReciever {
             return null;
         }
 
+        String topicName = router.route(event);
+
+        Topic topic = topicManager.getOrCreateTopic(topicName);
+
+        PartitionManager partitionManager = topic.getPartitionManager();
+
         partitionManager.getQueue(partition).publish(event);
+
+        System.out.println("[ROUTER] Event " + event.eventId() + " -> " + topicName + " -> Partition " + partition);
 
         return event;
     }
