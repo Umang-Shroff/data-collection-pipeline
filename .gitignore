@@ -1,9 +1,40 @@
+src/main/java/events/EventLogs/*.log
+src/main/java/events/EventLogs/events.log
+src/main/java/events/EventLogs/clean-events.log
+
+# Compiled output
 *.class
-.idea/
-out/
 target/
+out/
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
 .vscode/
-test/
-src/events/EventLogs/*.log
-src/events/EventLogs/events.log
-src/events/EventLogs/clean-events.log
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+
+# Runtime / pipeline state
+state/
+checkpoints/
+*.tmp
+*.temp
+*.pid
+
+# Maven wrapper (optional safety)
+.mvn/
+
+# Environment files
+.env
+.env.*

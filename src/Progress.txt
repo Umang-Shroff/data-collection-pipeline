@@ -154,11 +154,8 @@ Main terminates
 
 TODO:
 
-
-Enrichment:
-
+1. Enrichment:
 Add metadata.
-
 Producer sends:
 
 {
@@ -193,6 +190,45 @@ Queue
 because workers should spend most of their time writing batches.
 
 You don't want workers doing heavy transformations if possible.
+
+
+
+
+
+2.  Include in the dashboard:
+User Journey
+Funnels and show 1000 opens 700 logins 150 purchases
+Cohort / Retention
+
+Phase 1
+Current pipeline
+
+Phase 2
+Replace: metrics.log
+with: ClickHouse and store raw events
+
+Phase 3
+Build Analytics API
+/metrics/events
+/metrics/top-users
+/events/hourly
+
+
+Phase 4
+React Dashboard
+Charts
+Tables
+Filters
+
+Phase 5
+Funnels
+
+Phase 6
+Retention
+
+
+
+
 
 
 
