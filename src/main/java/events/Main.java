@@ -14,6 +14,7 @@ import events.Workers.BatchWorker;
 import events.LogGenerator.FileEventStore;
 import events.Partition.PartitionManager;
 import events.Routing.TopicManager;
+import events.Storage.ClickHouseEventStore;
 import events.Routing.CategoryRouter;
 import events.Routing.EventRouter;
 import events.Routing.Topic;
@@ -36,11 +37,12 @@ public class Main {
 
             Random random = new Random();
 
-            EventRepository eventStore = new FileEventStore(FileConfig.EVENT_LOG);
+            // EventRepository eventStore = new FileEventStore(FileConfig.EVENT_LOG);
+            EventRepository eventStore = new ClickHouseEventStore();
 
-            DedupProcessor dedupProcessor = new DedupProcessor(
-                Paths.get(FileConfig.EVENT_LOG),Paths.get(FileConfig.CLEAN_EVENT_LOG)
-            );
+            // DedupProcessor dedupProcessor = new DedupProcessor(
+            //     Paths.get(FileConfig.EVENT_LOG),Paths.get(FileConfig.CLEAN_EVENT_LOG)
+            // );
 
             // EventQueue queue = new EventQueue(queueCapacity);
             TopicManager topicManager = new TopicManager(partitionCount, queueCapacity);
@@ -67,7 +69,7 @@ public class Main {
             // Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
             // System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
 
-            for(int i=0;i<12;i++){
+            for(int i=0;i<1000;i++){
                 String userId = "user"+i;
                 EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
                 eventReciever.recieve(userId, eventType);
@@ -109,22 +111,22 @@ public class Main {
                 thread.join();
             }
 
-            try{
-                dedupProcessor.process();
-            } catch(IOException e) {
-                System.err.println("Error processing file: " + e.getMessage());
-                e.printStackTrace();
-            }
+            // try{
+            //     dedupProcessor.process();
+            // } catch(IOException e) {
+            //     System.err.println("Error processing file: " + e.getMessage());
+            //     e.printStackTrace();
+            // }
 
-            try{
-                AggregationProcessor aggregationProcessor = new AggregationProcessor(Paths.get("EventLogs/clean-events.log"));
-                AnalyticsReport report = aggregationProcessor.process();
-                AnalyticsWriter analyticsWriter = new AnalyticsWriter("EventLogs/metrics.log");
-                analyticsWriter.write(report);
-            } catch(IOException e){
-                System.err.println("Error processing file: " + e.getMessage());
-                e.printStackTrace();
-            }
+            // try{
+            //     AggregationProcessor aggregationProcessor = new AggregationProcessor(Paths.get("EventLogs/clean-events.log"));
+            //     AnalyticsReport report = aggregationProcessor.process();
+            //     AnalyticsWriter analyticsWriter = new AnalyticsWriter("EventLogs/metrics.log");
+            //     analyticsWriter.write(report);
+            // } catch(IOException e){
+            //     System.err.println("Error processing file: " + e.getMessage());
+            //     e.printStackTrace();
+            // }
 
             //Printing all events
             System.out.println("Total events = "+statsGenerator.countAllEvents());
