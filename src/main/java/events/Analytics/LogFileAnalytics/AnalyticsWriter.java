@@ -1,6 +1,7 @@
-package events.Analytics;
+package events.Analytics.LogFileAnalytics;
 
 import events.EventType;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;

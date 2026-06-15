@@ -43,7 +43,7 @@ public class EventReciever {
 
         partitionManager.getQueue(partition).publish(event);
 
-        System.out.println("[ROUTER] Event " + event.eventId() + " -> " + topicName + " -> Partition " + partition);
+        // System.out.println("[ROUTER] Event " + event.eventId() + " -> " + topicName + " -> Partition " + partition);
 
         return event;
     }

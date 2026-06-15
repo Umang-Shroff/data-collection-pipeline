@@ -1,8 +1,8 @@
 package events.Processing;
 
-import events.Analytics.AnalyticsReport;
 import events.Event;
 import events.EventType;
+import events.Analytics.LogFileAnalytics.AnalyticsReport;
 
 import java.io.BufferedReader;
 import java.io.IOException;

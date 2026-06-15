@@ -1,4 +1,4 @@
-package events.Analytics;
+package events.Analytics.LogFileAnalytics;
 
 import events.EventType;
 import java.util.Map;

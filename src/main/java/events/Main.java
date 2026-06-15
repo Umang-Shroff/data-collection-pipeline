@@ -24,8 +24,10 @@ import events.Validation.UserValidator.UserValidator;
 import events.Validation.TimestampValidator.TimestampValidator;
 import events.Processing.DedupProcessor;
 import events.LogGenerator.FileConfig;
-import events.Analytics.AnalyticsReport;
-import events.Analytics.AnalyticsWriter;
+import events.Analytics.ClickHouseAnalytics.AnalyticsService;
+import events.Analytics.ClickHouseAnalytics.ClickHouseAnalyticsService;
+import events.Analytics.LogFileAnalytics.AnalyticsReport;
+import events.Analytics.LogFileAnalytics.AnalyticsWriter;
 import events.Processing.AggregationProcessor;
 
 public class Main {
@@ -128,20 +130,55 @@ public class Main {
             //     e.printStackTrace();
             // }
 
-            //Printing all events
-            System.out.println("Total events = "+statsGenerator.countAllEvents());
+            // //Printing all events
+            // System.out.println("Total events = "+statsGenerator.countAllEvents());
 
-            //Printing all events by type 
-            System.out.println("Events by type: ");
-            Map<EventType, Integer> counts = statsGenerator.countAllByType();
+            // //Printing all events by type 
+            // System.out.println("Events by type: ");
+            // Map<EventType, Integer> counts = statsGenerator.countAllByType();
 
-            for(Map.Entry<EventType, Integer> entry : counts.entrySet()){
-                System.out.println(entry.getKey() + " -> " + entry.getValue());
-            }  
+            // for(Map.Entry<EventType, Integer> entry : counts.entrySet()){
+            //     System.out.println(entry.getKey() + " -> " + entry.getValue());
+            // }  
 
             // Printing events of specified type
             // System.out.println("Purchase events: "+ statsGenerator.countByType(EventType.PURCHASE));
 
+            AnalyticsService analytics =
+            new ClickHouseAnalyticsService();
+
+            System.out.println();
+            System.out.println("===== ANALYTICS =====");
+
+            System.out.println(
+                    "Total Events: "
+                    + analytics.getTotalEvents()
+            );
+
+            System.out.println(
+                    "Event Counts: "
+                    + analytics.getEventCountPerType()
+            );
+
+            System.out.println(
+                    "Percentages: "
+                    + analytics.getEventTypePercentages()
+            );
+
+            System.out.println(
+                    "Top Users: "
+                    + analytics.getTopUsers(5)
+            );
+
+            System.out.println(
+                    "Events Per Hour: "
+                    + analytics.getEventsPerHour()
+            );
+
+            System.out.println(
+                    "Partition Distribution: "
+                    + analytics.getPartitionDistribution()
+            );
         } catch (InterruptedException e){
             e.printStackTrace();
         }
