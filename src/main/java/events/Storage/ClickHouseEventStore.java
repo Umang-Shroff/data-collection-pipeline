@@ -3,6 +3,9 @@ package events.Storage;
 import events.Event;
 import events.EventRepository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,16 +16,15 @@ import java.util.Properties;
 
 public class ClickHouseEventStore implements EventRepository {
 
-    private static final String URL =
-            "jdbc:clickhouse://localhost:8123/analytics";
+    private static final String URL = "jdbc:clickhouse://localhost:8123/analytics";
 
-    private static final String USER =
-            "event_user";
+    private static final String USER = "event_user";
 
-    private static final String PASSWORD =
-            "event123";
+    private static final String PASSWORD = "event123";
 
     private Connection connection;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ClickHouseEventStore() {
 
@@ -69,14 +71,19 @@ public class ClickHouseEventStore implements EventRepository {
                 INSERT INTO events
                 (
                     eventId,
+                    tenantId,
                     userId,
                     eventType,
                     eventTimestamp,
-                    partitionId
+                    partitionId,
+                    payload,
+                    amount,
+                    device,
+                    campaignId
                 )
                 VALUES
                 (
-                    ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
                 """;
 
@@ -84,32 +91,25 @@ public class ClickHouseEventStore implements EventRepository {
 
             for(Event event : events) {
 
-                statement.setLong(
-                        1,
-                        event.eventId()
-                );
+                statement.setLong(1, event.eventId());
 
-                statement.setString(
-                        2,
-                        event.userId()
-                );
+                statement.setString(2, event.tenantId());
 
-                statement.setString(
-                        3,
-                        event.eventType().name()
-                );
+                statement.setString(3, event.userId());
 
-                statement.setTimestamp(
-                        4,
-                        new Timestamp(
-                                event.timestamp()
-                        )
-                );
+                statement.setString(4, event.eventType().name());
 
-                statement.setInt(
-                        5,
-                        event.partitionId()
-                );
+                statement.setTimestamp(5, new Timestamp(event.timestamp()));
+
+                statement.setInt(6, event.partitionId());
+
+                statement.setString(7, objectMapper.writeValueAsString(event.payload()));
+
+                statement.setDouble(8, event.amount());
+
+                statement.setString(9, event.device());
+
+                statement.setString(10, event.campaignId());
 
                 statement.addBatch();
             }

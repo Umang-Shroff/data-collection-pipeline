@@ -86,7 +86,12 @@ public class Main {
                 String userId = "user"+ random.nextInt(500);
                 EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
                 Map<String, Object> payload = createPayload(eventType, random);
-                eventReceiver.receive(tenantId, userId, eventType, payload);
+                
+                double amount = payload.containsKey("amount") ? ((Number) payload.get("amount")).doubleValue() : 0;
+                String device = payload.containsKey("device") ? payload.get("device").toString() : "";
+                String campaignId = payload.containsKey("campaignId") ? payload.get("campaignId").toString() : "";
+
+                eventReceiver.receive(tenantId, userId, eventType, payload, amount, device, campaignId);
             }
 
             // Start one worker per partition
@@ -156,41 +161,42 @@ public class Main {
             // Printing events of specified type
             // System.out.println("Purchase events: "+ statsGenerator.countByType(EventType.PURCHASE));
 
-            AnalyticsService analytics =
-            new ClickHouseAnalyticsService();
+            // AnalyticsService analytics =
+            // new ClickHouseAnalyticsService();
 
-            System.out.println();
-            System.out.println("===== ANALYTICS =====");
+            // System.out.println();
+            // System.out.println("===== ANALYTICS =====");
 
-            System.out.println(
-                    "Total Events: "
-                    + analytics.getTotalEvents()
-            );
+            // System.out.println(
+            //         "Total Events: "
+            //         + analytics.getTotalEvents()
+            // );
 
-            System.out.println(
-                    "Event Counts: "
-                    + analytics.getEventCountPerType()
-            );
+            // System.out.println(
+            //         "Event Counts: "
+            //         + analytics.getEventCountPerType()
+            // );
 
-            System.out.println(
-                    "Percentages: "
-                    + analytics.getEventTypePercentages()
-            );
+            // System.out.println(
+            //         "Percentages: "
+            //         + analytics.getEventTypePercentages()
+            // );
 
-            System.out.println(
-                    "Top Users: "
-                    + analytics.getTopUsers(5)
-            );
+            // System.out.println(
+            //         "Top Users: "
+            //         + analytics.getTopUsers(5)
+            // );
 
-            System.out.println(
-                    "Events Per Hour: "
-                    + analytics.getEventsPerHour()
-            );
+            // System.out.println(
+            //         "Events Per Hour: "
+            //         + analytics.getEventsPerHour()
+            // );
 
-            System.out.println(
-                    "Partition Distribution: "
-                    + analytics.getPartitionDistribution()
-            );
+            // System.out.println(
+            //         "Partition Distribution: "
+            //         + analytics.getPartitionDistribution()
+            // );
+            
         } catch (InterruptedException e){
             e.printStackTrace();
         }

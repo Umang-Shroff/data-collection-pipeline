@@ -9,18 +9,25 @@ public record Event(
     EventType eventType,
     long timestamp,
     int partitionId, // for sharding
-    Map<String, Object> payload
+    Map<String, Object> payload,
+
+    double amount,
+    String device,
+    String campaignId
 ) {
     @Override
     public String toString() {
         return "Event{" +
                 "eventId=" + eventId +
-                ", tenantId=" + tenantId +
+                ", tenantId=" + tenantId + '\'' +
                 ", userId='" + userId + '\'' +
                 ", eventType=" + eventType +
                 ", timestamp=" + timestamp +
                 ", partitionId=" + partitionId +
                 ", payload=" + payload +
+                ", amount=" + amount +
+                ", device='" + device + '\'' +
+                ", campaignId='" + campaignId + '\'' +
                 '}';
     }
 }

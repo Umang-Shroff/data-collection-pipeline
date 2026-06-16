@@ -146,6 +146,14 @@ Main terminates
 
 
 
+CLICKHOUSE DATABASE STATUS:
+
+Tables:
+events -> Raw event store
+event_type_counts -> Precomputed event metrics
+revenue_stats -> Revenue metrics
+tenant_event_counts -> Multi-tenant Analytics
+campaign_stats -> Marketing analytica
 
 
 
@@ -157,12 +165,13 @@ TODO:
 
 1. Tenant Support
 2. Payload Support
-3. Operational Metrics
-4. Dead Letter Queue
-5. Retry Layer
-6. Streaming Dedup
-7. Queue Monitoring
-8. Latency Metrics
+3. Load Testing
+4. Operational Metrics
+5. Dead Letter Queue
+6. Retry Layer
+7. Streaming Dedup
+8. Queue Monitoring
+9. Latency Metrics
 
 
 AND

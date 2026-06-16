@@ -24,12 +24,12 @@ public class EventReceiver {
         this.router = router;
     }
     
-    public Event receive(String tenantId, String userId, EventType eventType, Map<String, Object> payload) throws InterruptedException {
+    public Event receive(String tenantId, String userId, EventType eventType, Map<String, Object> payload, double amount, String device, String campaignId) throws InterruptedException {
         // return new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis());
 
         int partition = partitioner.getPartition(userId);
         
-        Event event = new Event(EventIdGenerator.generateId(), tenantId, userId, eventType, System.currentTimeMillis(),partition, payload);
+        Event event = new Event(EventIdGenerator.generateId(), tenantId, userId, eventType, System.currentTimeMillis(),partition, payload, amount, device, campaignId);
         
         ValidationResult result = validator.validate(event);
         if(!result.valid()){
