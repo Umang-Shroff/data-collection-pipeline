@@ -5,30 +5,35 @@ import java.util.Map;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.nio.file.Paths;
 import java.io.IOException;
 
 import events.Partition.Partitioner;
 import events.Partition.SimplePartitioner;
 import events.Workers.BatchWorker;
-import events.LogGenerator.FileEventStore;
+// import events.LogGenerator.FileEventStore;
 import events.Partition.PartitionManager;
 import events.Routing.TopicManager;
 import events.Storage.ClickHouseEventStore;
+import events.Tenant.TenantResolver;
+import events.Tenant.TenantStore;
 import events.Routing.CategoryRouter;
 import events.Routing.EventRouter;
 import events.Routing.Topic;
 import events.Validation.ValidationPipeline;
 import events.Validation.EventTypeValidator.EventTypeValidator;
+import events.Validation.PayloadValidator.PayloadValidator;
+import events.Validation.TenantValidator.TenantValidator;
 import events.Validation.UserValidator.UserValidator;
 import events.Validation.TimestampValidator.TimestampValidator;
-import events.Processing.DedupProcessor;
+// import events.Processing.DedupProcessor;
 import events.LogGenerator.FileConfig;
 import events.Analytics.ClickHouseAnalytics.AnalyticsService;
 import events.Analytics.ClickHouseAnalytics.ClickHouseAnalyticsService;
 import events.Analytics.LogFileAnalytics.AnalyticsReport;
 import events.Analytics.LogFileAnalytics.AnalyticsWriter;
-import events.Processing.AggregationProcessor;
+// import events.Processing.AggregationProcessor;
 
 public class Main {
     public static void main(String[] args) {
@@ -53,10 +58,15 @@ public class Main {
 
             Partitioner partitioner = new SimplePartitioner(partitionCount);
 
+            TenantStore tenantStore = new TenantStore();
+            TenantResolver tenantResolver = new TenantResolver(tenantStore);
+
             ValidationPipeline validator = new ValidationPipeline();
+            validator.addValidator(new TenantValidator(tenantResolver));
             validator.addValidator(new UserValidator());
             validator.addValidator(new EventTypeValidator());
             validator.addValidator(new TimestampValidator());
+            validator.addValidator(new PayloadValidator());
 
             EventReceiver eventReceiver = new EventReceiver(topicManager, partitioner, validator, router);
 
@@ -73,9 +83,10 @@ public class Main {
 
             for(int i=0;i<1000;i++){
                 String tenantId = "tenant-"+(random.nextInt(4)+1);
-                String userId = "user"+i;
+                String userId = "user"+ random.nextInt(500);
                 EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
-                eventReceiver.receive(tenantId, userId, eventType);
+                Map<String, Object> payload = createPayload(eventType, random);
+                eventReceiver.receive(tenantId, userId, eventType, payload);
             }
 
             // Start one worker per partition
@@ -183,5 +194,33 @@ public class Main {
         } catch (InterruptedException e){
             e.printStackTrace();
         }
+
+    }
+    private static Map<String, Object> createPayload(EventType eventType, Random random){
+        Map<String, Object> payload = new HashMap<>();
+
+        switch(eventType){
+            case PURCHASE -> {
+                payload.put("amount", random.nextInt(5000)+100);
+                payload.put("currency", "INR");
+                payload.put("productId", "product-" + random.nextInt(100));
+            }
+
+            case USER_LOGIN -> {
+                String[] devices = {"android", "ios", "web"};
+                payload.put("device", devices[random.nextInt(devices.length)]);
+            }
+
+            case APP_OPEN -> {
+                String[] sources = {"notification", "organic", "deep-link"};
+                payload.put("source", sources[random.nextInt(sources.length)]);
+            }
+
+            case CAMPAIGN_CLICK -> {
+                payload.put("campaignId", "campaign-" + random.nextInt(20));
+                payload.put("channel", random.nextBoolean() ? "push" : "email");
+            }
+        }
+        return payload;
     }
 }

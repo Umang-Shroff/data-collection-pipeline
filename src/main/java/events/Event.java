@@ -1,12 +1,15 @@
 package events;
 
+import java.util.Map;
+
 public record Event(
     long eventId,
     String tenantId,
     String userId,
     EventType eventType,
     long timestamp,
-    int partitionId // for sharding
+    int partitionId, // for sharding
+    Map<String, Object> payload
 ) {
     @Override
     public String toString() {
@@ -17,6 +20,7 @@ public record Event(
                 ", eventType=" + eventType +
                 ", timestamp=" + timestamp +
                 ", partitionId=" + partitionId +
+                ", payload=" + payload +
                 '}';
     }
 }

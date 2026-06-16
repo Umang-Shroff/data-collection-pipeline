@@ -1,5 +1,7 @@
 package events;
 
+import java.util.Map;
+
 import events.Partition.Partitioner;
 import events.Partition.PartitionManager;
 import events.Validation.EventValidator;
@@ -22,12 +24,12 @@ public class EventReceiver {
         this.router = router;
     }
     
-    public Event receive(String tenantId, String userId, EventType eventType) throws InterruptedException {
+    public Event receive(String tenantId, String userId, EventType eventType, Map<String, Object> payload) throws InterruptedException {
         // return new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis());
 
         int partition = partitioner.getPartition(userId);
         
-        Event event = new Event(EventIdGenerator.generateId(), tenantId, userId, eventType, System.currentTimeMillis(),partition);
+        Event event = new Event(EventIdGenerator.generateId(), tenantId, userId, eventType, System.currentTimeMillis(),partition, payload);
         
         ValidationResult result = validator.validate(event);
         if(!result.valid()){
