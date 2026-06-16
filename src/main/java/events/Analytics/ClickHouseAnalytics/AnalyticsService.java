@@ -15,4 +15,8 @@ public interface AnalyticsService {
     Map<String, Long> getEventsPerHour();
 
     Map<Integer, Long> getPartitionDistribution();
+
+    Map<String, Double> getRevenueByDate();
+
+    Map<String, Long> getTenantDistribution();
 }

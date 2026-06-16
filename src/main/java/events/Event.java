@@ -6,6 +6,7 @@ public record Event(
     long eventId,
     String tenantId,
     String userId,
+    String productId,
     EventType eventType,
     long timestamp,
     int partitionId, // for sharding
@@ -21,6 +22,7 @@ public record Event(
                 "eventId=" + eventId +
                 ", tenantId=" + tenantId + '\'' +
                 ", userId='" + userId + '\'' +
+                ", productId='" + productId + '\'' +
                 ", eventType=" + eventType +
                 ", timestamp=" + timestamp +
                 ", partitionId=" + partitionId +

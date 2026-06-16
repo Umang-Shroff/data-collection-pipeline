@@ -90,8 +90,9 @@ public class Main {
                 double amount = payload.containsKey("amount") ? ((Number) payload.get("amount")).doubleValue() : 0;
                 String device = payload.containsKey("device") ? payload.get("device").toString() : "";
                 String campaignId = payload.containsKey("campaignId") ? payload.get("campaignId").toString() : "";
+                String productId = payload.containsKey("productId") ? payload.get("productId").toString() : "";
 
-                eventReceiver.receive(tenantId, userId, eventType, payload, amount, device, campaignId);
+                eventReceiver.receive(tenantId, userId, productId, eventType, payload, amount, device, campaignId);
             }
 
             // Start one worker per partition
@@ -196,7 +197,17 @@ public class Main {
             //         "Partition Distribution: "
             //         + analytics.getPartitionDistribution()
             // );
-            
+
+            // System.out.println(
+            //         "Revenue By Date: "
+            //         + analytics.getRevenueByDate()
+            // );
+
+            // System.out.println(
+            //         "Tenant Distribution: "
+            //         + analytics.getTenantDistribution()
+            // );
+
         } catch (InterruptedException e){
             e.printStackTrace();
         }

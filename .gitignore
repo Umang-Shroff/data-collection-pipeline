@@ -2,6 +2,8 @@ src/main/java/events/EventLogs/*.log
 src/main/java/events/EventLogs/events.log
 src/main/java/events/EventLogs/clean-events.log
 
+Schema.txt
+
 # Compiled output
 *.class
 target/

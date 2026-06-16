@@ -73,6 +73,7 @@ public class ClickHouseEventStore implements EventRepository {
                     eventId,
                     tenantId,
                     userId,
+                    productId,
                     eventType,
                     eventTimestamp,
                     partitionId,
@@ -83,7 +84,7 @@ public class ClickHouseEventStore implements EventRepository {
                 )
                 VALUES
                 (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
                 """;
 
@@ -97,19 +98,21 @@ public class ClickHouseEventStore implements EventRepository {
 
                 statement.setString(3, event.userId());
 
-                statement.setString(4, event.eventType().name());
+                statement.setString(4, event.productId());
 
-                statement.setTimestamp(5, new Timestamp(event.timestamp()));
+                statement.setString(5, event.eventType().name());
 
-                statement.setInt(6, event.partitionId());
+                statement.setTimestamp(6, new Timestamp(event.timestamp()));
 
-                statement.setString(7, objectMapper.writeValueAsString(event.payload()));
+                statement.setInt(7, event.partitionId());
 
-                statement.setDouble(8, event.amount());
+                statement.setString(8, objectMapper.writeValueAsString(event.payload()));
 
-                statement.setString(9, event.device());
+                statement.setDouble(9, event.amount());
 
-                statement.setString(10, event.campaignId());
+                statement.setString(10, event.device());
+
+                statement.setString(11, event.campaignId());
 
                 statement.addBatch();
             }

@@ -61,10 +61,9 @@ public class ClickHouseAnalyticsService implements AnalyticsService {
                 """
                 SELECT
                     eventType,
-                    count(*)
-                FROM events
+                    sum(count)
+                FROM event_type_counts
                 GROUP BY eventType
-                ORDER BY count(*) DESC
                 """;
 
         Map<String, Long> result = new LinkedHashMap<>();
@@ -88,38 +87,39 @@ public class ClickHouseAnalyticsService implements AnalyticsService {
                 """
                 SELECT
                     eventType,
-                    round(
-                        count() * 100.0 /
-                        (
-                            SELECT count()
-                            FROM events
-                        ),
-                        2
-                    ) AS percentage
-                FROM events
+                    sum(count) AS total
+                FROM event_type_counts
                 GROUP BY eventType
-                ORDER BY percentage DESC
                 """;
 
-        Map<String, Double> result =
-                new LinkedHashMap<>();
-
+        Map<String, Long> counts = new LinkedHashMap<>();
+        
+        long totalEvents = 0;
+        
         try (
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet rs = statement.executeQuery()
         ) {
 
             while(rs.next()) {
-                result.put(
-                        rs.getString("eventType"),
-                        rs.getDouble("percentage")
+                long count = rs.getLong("total");
+                counts.put(
+                        rs.getString("eventType"), count
                 );
+                totalEvents += count;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return result;
+        Map<String, Double> percentages = new LinkedHashMap<>();
+
+        for(Map.Entry<String, Long> entry : counts.entrySet()){
+            double percentage = totalEvents == 0 ? 0 : (entry.getValue() * 100.0) / totalEvents;
+
+            percentages.put(entry.getKey(), Math.round(percentage * 100.0) / 100.0);
+        }
+        return percentages;
     }
 
     @Override
@@ -237,6 +237,62 @@ public class ClickHouseAnalyticsService implements AnalyticsService {
         }
         return result;
     }
+
+    @Override
+    public Map<String, Double> getRevenueByDate(){
+
+        String sql = 
+                """
+                SELECT
+                    eventDate,
+                    revenue
+                FROM revenue_stats
+                ORDER BY eventDate
+                """;
+
+        Map<String, Double> result = new LinkedHashMap<>();
+
+        try(
+            PreparedStatement statement = connection.prepareStatement(sql); 
+            ResultSet rs = statement.executeQuery()
+        ){
+            while(rs.next()){
+                result.put(rs.getString("eventDate"), rs.getDouble("revenue"));
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Long> getTenantDistribution(){
+
+        String sql = 
+                """
+                SELECT
+                    tenantId,
+                    sum(count) AS total
+                FROM tenant_event_counts
+                GROUP BY tenantId
+                ORDER BY total DESC
+                """;
+
+        Map<String, Long> result = new LinkedHashMap<>();
+
+        try(
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet rs = statement.executeQuery()
+        ) {
+            while(rs.next()){
+                result.put(rs.getString("tenantId"), rs.getLong("total"));
+            }
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+        return result;
+    }
+
 
     public void close() {
 
