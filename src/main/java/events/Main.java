@@ -58,23 +58,24 @@ public class Main {
             validator.addValidator(new EventTypeValidator());
             validator.addValidator(new TimestampValidator());
 
-            EventReciever eventReciever = new EventReciever(topicManager, partitioner, validator, router);
+            EventReceiver eventReceiver = new EventReceiver(topicManager, partitioner, validator, router);
 
             StatsGenerator statsGenerator = new StatsGenerator(eventStore);
 
             List<BatchWorker> workers = new ArrayList<>();
             List<Thread> workerThreads = new ArrayList<>();
         
-            // Event e1 = eventReciever.recieve("abcd123", EventType.APP_OPEN);
-            // Event e2 = eventReciever.recieve("dbxy6654", EventType.PURCHASE);
-            // Event e3 = eventReciever.recieve("rrtx87", EventType.PURCHASE);
-            // Event e4 = eventReciever.recieve("iop0945", EventType.USER_LOGIN);
+            // Event e1 = eventReceiver.receive("tenant-1","abcd123", EventType.APP_OPEN);
+            // Event e2 = eventReceiver.receive("tenant-2","dbxy6654", EventType.PURCHASE);
+            // Event e3 = eventReceiver.receive("tenant-3","rrtx87", EventType.PURCHASE);
+            // Event e4 = eventReceiver.receive("tenant-4","iop0945", EventType.USER_LOGIN);
             // System.out.println(e1 + "\n" + e2 + "\n" + e3 + "\n" + e4);
 
             for(int i=0;i<1000;i++){
+                String tenantId = "tenant-"+(random.nextInt(4)+1);
                 String userId = "user"+i;
                 EventType eventType = EventType.values()[random.nextInt(EventType.values().length)];
-                eventReciever.recieve(userId, eventType);
+                eventReceiver.receive(tenantId, userId, eventType);
             }
 
             // Start one worker per partition

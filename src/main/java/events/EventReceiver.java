@@ -8,26 +8,26 @@ import events.Routing.EventRouter;
 import events.Routing.Topic;
 import events.Routing.TopicManager;
 
-public class EventReciever {
+public class EventReceiver {
 
     private final Partitioner partitioner;
     private final TopicManager topicManager;
     private final EventValidator validator;
     private final EventRouter router;
 
-    public EventReciever(TopicManager topicManager, Partitioner partitioner, EventValidator validator, EventRouter router) {
+    public EventReceiver(TopicManager topicManager, Partitioner partitioner, EventValidator validator, EventRouter router) {
         this.topicManager = topicManager;
         this.partitioner = partitioner;
         this.validator = validator;
         this.router = router;
     }
     
-    public Event recieve(String userId, EventType eventType) throws InterruptedException {
+    public Event receive(String tenantId, String userId, EventType eventType) throws InterruptedException {
         // return new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis());
 
         int partition = partitioner.getPartition(userId);
         
-        Event event = new Event(EventIdGenerator.generateId(), userId, eventType, System.currentTimeMillis(),partition);
+        Event event = new Event(EventIdGenerator.generateId(), tenantId, userId, eventType, System.currentTimeMillis(),partition);
         
         ValidationResult result = validator.validate(event);
         if(!result.valid()){

@@ -2,6 +2,7 @@ package events;
 
 public record Event(
     long eventId,
+    String tenantId,
     String userId,
     EventType eventType,
     long timestamp,
@@ -11,6 +12,7 @@ public record Event(
     public String toString() {
         return "Event{" +
                 "eventId=" + eventId +
+                ", tenantId=" + tenantId +
                 ", userId='" + userId + '\'' +
                 ", eventType=" + eventType +
                 ", timestamp=" + timestamp +

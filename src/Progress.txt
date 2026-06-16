@@ -154,6 +154,20 @@ Main terminates
 
 TODO:
 
+
+1. Tenant Support
+2. Payload Support
+3. Operational Metrics
+4. Dead Letter Queue
+5. Retry Layer
+6. Streaming Dedup
+7. Queue Monitoring
+8. Latency Metrics
+
+
+AND
+
+
 1. Enrichment:
 Add metadata.
 Producer sends:
