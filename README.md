@@ -93,6 +93,8 @@ Persists processed events into ClickHouse for downstream analytics.
 
 ---
 
+### Architecture Diagram
+
 ![alt text](image.png)
 
 ---
