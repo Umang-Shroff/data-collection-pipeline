@@ -1,88 +1,190 @@
-# Event Ingestion Simulator
+# Event Ingestion Service
 
-## Overview
+Event ingestion pipeline for a ClickHouse-powered analytics platform inspired by CleverTap.
 
-A Java-based event ingestion simulator that models how analytics platforms receive, store, and analyze user activity events.
+This repository is responsible for generating, simulating, and ingesting application events that power the complete analytics system.
 
-Supported event types:
+---
 
-* USER_LOGIN
-* APP_OPEN
-* PURCHASE
-* CAMPAIGN_CLICK
+## System Architecture
 
-The project demonstrates core Java and backend engineering concepts including:
+```text
+┌──────────────────────────────┐
+│      Event Ingestion         │
+│      (This Repository)       │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      ClickHouse (Docker)     │
+│   Events + Materialized      │
+│           Views              │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│        Analytics API         │
+│         Spring Boot          │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│      Analytics Dashboard     │
+│          Vue + TS            │
+└──────────────────────────────┘
+```
 
-* Object-Oriented Programming
-* Records
-* Encapsulation
-* Constructor Injection
-* Interfaces
-* Polymorphism
-* Collections Framework
-* Event Analytics
+### Related Repositories
 
-## Architecture
+- [Analytics API](https://github.com/Umang-Shroff/analytics-api)
+- [Analytics Dashboard](https://github.com/Umang-Shroff/event-dashboard)
 
-Client
-→ EventReceiver
-→ EventRepository
-→ EventStore
-→ StatsGenerator
+---
 
-## Features
+## Ingestion Pipeline
 
-* Immutable event model using Java Records
-* Event ID generation using static sequence
-* In-memory event storage
-* Event analytics and aggregation
-* Event count by type
-* Abstraction through EventRepository interface
+The event ingestion service follows a multi-stage processing pipeline designed to simulate large-scale analytics systems.
 
-## Concepts Practiced
+```text
+Event Generator
+        │
+        ▼
+Event Router
+        │
+        ▼
+Partition Manager
+        │
+        ▼
+Partition Queues
+        │
+        ▼
+Worker Threads
+        │
+        ▼
+Batch Builder
+        │
+        ▼
+ClickHouse Writer
+```
 
-### OOP
+### Event Router
 
-* Classes
-* Objects
-* Encapsulation
-* Abstraction
-* Polymorphism
-* Records
+Routes incoming events to the appropriate partition based on the routing strategy.
 
-### Java Basics
+### Partition Manager
 
-* Constructors
-* Access Modifiers
-* Packages
+Maintains multiple partitions to distribute event processing workload.
 
-### Static
+### Partition Queues
 
-* Static Variables
-* Static Methods
-* Static Blocks
+Buffers incoming events before processing.
 
-### Collections
+### Worker Threads
 
-* List
-* Map
-* Set
-* Enhanced For Loops
+Dedicated workers consume events from partitions independently.
 
-## Sample Output
+### Batch Processing
 
-Total Events: 4
+Events are grouped into batches before database insertion to improve throughput.
 
-USER_LOGIN -> 2
-APP_OPEN -> 1
-PURCHASE -> 1
+### ClickHouse Writer
 
-## Future Improvements
+Persists processed events into ClickHouse for downstream analytics.
 
-* Persistent storage
-* Multithreading support
-* REST API endpoints
-* Event filtering
-* Unit tests
-* Database integration
-* Kafka integration
+---
+
+![alt text](image.png)
+
+---
+
+## Responsibilities
+
+This service acts as the entry point of the analytics platform and is responsible for:
+
+- Event generation
+- Event ingestion
+- User activity simulation
+- Multi-tenant event generation
+- Purchase and revenue events
+- Campaign events
+- Device metadata generation
+- Partition assignment
+- ClickHouse persistence
+
+---
+
+## Event Schema
+
+Each generated event contains:
+
+| Field          | Description                   |
+| -------------- | ----------------------------- |
+| eventId        | Unique event identifier       |
+| tenantId       | Tenant/application identifier |
+| userId         | User generating the event     |
+| productId      | Associated product            |
+| eventType      | Event category                |
+| eventTimestamp | Event creation time           |
+| partitionId    | Simulated partition           |
+| payload        | Event metadata                |
+| amount         | Revenue amount                |
+| device         | User device                   |
+| campaignId     | Campaign identifier           |
+
+---
+
+## Supported Event Types
+
+- PAGE_VIEW
+- CLICK
+- ADD_TO_CART
+- PURCHASE
+- LOGIN
+- LOGOUT
+
+---
+
+## Technology Stack
+
+- Java
+- Maven
+- JDBC
+- ClickHouse
+- Docker
+
+---
+
+## Position in the Platform
+
+This repository produces the raw events that drive the entire analytics ecosystem.
+
+Generated events are stored in ClickHouse, aggregated through materialized views, exposed through Spring Boot APIs, and visualized inside the analytics dashboard.
+
+## Sample Event
+
+```json
+{
+  "eventId": 1001,
+  "tenantId": "tenant-1",
+  "userId": "user-42",
+  "productId": "product-17",
+  "eventType": "PURCHASE",
+  "eventTimestamp": "2026-06-20T15:45:12.421",
+  "partitionId": 3,
+  "amount": 799.0,
+  "device": "android",
+  "campaignId": "summer-sale"
+}
+```
+
+## Quick Start
+
+```bash
+git clone https://github.com/username/event-ingestion
+
+cd event-ingestion
+
+mvn clean install
+
+mvn exec:java
+```
